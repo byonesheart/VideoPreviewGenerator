@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>视频预览处理进度</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 16px; font: 14px/1.45 "Microsoft YaHei", sans-serif; color: #182336; background: #f5f7fb; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    h1 { margin: 0; font-size: 18px; }
+    button { cursor: pointer; border: 1px solid #c8d3e2; border-radius: 7px; background: white; padding: 6px 10px; color: #24364d; }
+    button:hover:enabled { background: #eaf1ff; }
+    button:disabled { opacity: .5; cursor: default; }
+    #cancel-all { color: #ad263b; }
+    .toggles { display: flex; flex-wrap: wrap; gap: 12px; margin: 13px 0; font-size: 12px; }
+    .toggles label { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
+    #summary { color: #56667a; margin: 8px 0; }
+    #jobs { height: calc(100vh - 135px); min-height: 125px; overflow: auto; }
+    .job { margin-bottom: 12px; padding: 12px; background: white; border: 1px solid #e0e6ef; border-radius: 10px; }
+    .job-title { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 7px; font-weight: 600; }
+    .item { border-top: 1px solid #edf0f5; padding: 9px 0 4px; }
+    .item-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+    .detail { color: #5c6b7e; font-size: 12px; margin-top: 2px; }
+    progress { display: block; width: 100%; height: 8px; margin-top: 7px; accent-color: #3d73d9; }
+    .empty { color: #65758a; padding: 18px 2px; }
+  </style>
+</head>
+<body>
+  <header><h1>处理进度</h1><button id="cancel-all" type="button">全部终止</button></header>
+  <div class="toggles">
+    <label><input id="low-priority" type="checkbox" />低优先级模式</label>
+    <label><input id="auto-close" type="checkbox" />完成后自动关闭</label>
+  </div>
+  <div id="summary">正在读取任务…</div>
+  <div id="jobs" aria-live="polite"></div>
+  <script src="mini.js"></script>
+</body>
+</html>

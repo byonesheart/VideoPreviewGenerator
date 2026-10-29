@@ -1,0 +1,34 @@
+node_modules/
+release/
+
+# Local settings, logs, job state, and extracted frames
+settings.json
+logs/
+jobs/
+*.log
+video-preview-*/
+
+# Generated images
+*预览.jpg
+*预览.gif
+
+# Local source videos (.ts is omitted because it may also be TypeScript)
+*.mp4
+*.mkv
+*.avi
+*.mov
+*.wmv
+*.flv
+*.webm
+*.m4v
+*.mpeg
+*.mpg
+*.mts
+*.m2ts
+
+# Local secrets, if added later
+.env
+.env.*
+*.pem
+*.pfx
+*.p12

@@ -1,0 +1,57 @@
+{
+  "name": "video-preview-grid",
+  "version": "1.0.19",
+  "description": "批量从视频均匀抽取 9 帧并生成九宫格预览图",
+  "main": "main.js",
+  "scripts": {
+    "postinstall": "node scripts/hide-ffmpeg-console.js",
+    "prepare:ffmpeg": "node scripts/hide-ffmpeg-console.js",
+    "start": "electron .",
+    "quick": "electron . --quick",
+    "dist:win": "electron-builder --win dir",
+    "dist:win:installer": "electron-builder --win nsis"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "ffmpeg-static": "^5.2.0"
+  },
+  "devDependencies": {
+    "electron": "^32.1.2",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.video-preview.grid",
+    "productName": "视频九宫格预览生成器",
+    "artifactName": "视频九宫格预览生成器-${version}-${arch}.${ext}",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "**/*",
+      "!release{,/**/*}",
+      "!quick-preview.cmd",
+      "!scripts/smoke-*.js"
+    ],
+    "asarUnpack": [
+      "node_modules/ffmpeg-static/**"
+    ],
+    "win": {
+      "signAndEditExecutable": false,
+      "target": [
+        {
+          "target": "dir",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "nsis": {
+      "artifactName": "视频九宫格预览生成器-安装版-${version}-${arch}.${ext}",
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
+}

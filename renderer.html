@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self';" />
+    <title>视频九宫格预览生成器</title>
+    <link rel="stylesheet" href="renderer.css" />
+  </head>
+  <body>
+    <main class="page-shell">
+      <nav class="page-navigation" aria-label="页面切换">
+        <button id="show-work-page" class="page-navigation-button active" type="button" aria-controls="work-page" aria-pressed="true">文件与进度</button>
+        <button id="show-settings-page" class="page-navigation-button" type="button" aria-controls="settings-page" aria-pressed="false">设置</button>
+      </nav>
+      <div id="work-page" class="work-layout page-content">
+        <section class="panel file-panel">
+          <div class="panel-heading">
+            <div>
+              <h2>文件</h2>
+              <p>视频只在后台读取，不会打开播放窗口。</p>
+            </div>
+            <span id="file-count" class="count-badge">0 个文件</span>
+          </div>
+          <div class="actions">
+            <button id="choose-button" class="button primary">批量选择视频</button>
+            <button id="choose-folder-button" class="button secondary">选择文件夹（含子文件夹）</button>
+            <button id="clear-button" class="button secondary" disabled>清空列表</button>
+          </div>
+          <div id="file-list" class="file-list empty-state">
+            <div class="empty-icon">＋</div>
+            <p>还没有选择视频</p>
+            <span>支持 MP4、MKV、AVI、MOV、WMV、FLV、WebM、TS、M4V、MPEG、MPG</span>
+          </div>
+        </section>
+
+        <section class="panel progress-panel">
+          <div class="progress-tabs" role="tablist" aria-label="处理信息">
+            <button id="show-progress-tab" class="progress-tab active" type="button" role="tab" aria-selected="true" aria-controls="progress-view">处理进度</button>
+            <button id="show-log-tab" class="progress-tab" type="button" role="tab" aria-selected="false" aria-controls="log-view">处理日志</button>
+          </div>
+          <div id="progress-view" class="progress-view" role="tabpanel" aria-labelledby="show-progress-tab">
+            <div class="panel-heading compact">
+              <p id="status-text">等待开始；右键启动的后台任务也会显示在这里</p>
+              <strong id="progress-percent" class="progress-percent">0%</strong>
+            </div>
+            <div class="progress-track"><div id="progress-bar" class="progress-bar"></div></div>
+            <div class="progress-scroll">
+              <div id="background-jobs" class="background-jobs" hidden></div>
+              <div id="result-list" class="result-list"></div>
+            </div>
+          </div>
+          <div id="log-view" class="log-view" role="tabpanel" aria-labelledby="show-log-tab" hidden>
+            <p>每个视频处理后立即记录成功或失败，失败标红；全部结束后汇总，按天保存。</p>
+            <div class="log-actions">
+              <button id="show-log-button" class="button secondary">打开日志位置</button>
+              <button id="clear-log-button" class="button secondary">清空当天日志</button>
+            </div>
+            <pre id="log-content" class="log-content">暂无处理日志</pre>
+          </div>
+          <div class="generate-actions">
+            <button id="generate-jpg-button" class="button generate" disabled>生成 JPG 预览图</button>
+            <button id="generate-gif-button" class="button generate" disabled>生成 GIF 动图</button>
+          </div>
+        </section>
+      </div>
+
+      <div id="settings-page" class="settings-layout page-content" hidden>
+        <div class="format-stack">
+          <section class="panel setting-panel">
+            <h2>JPG 设置</h2>
+            <div class="setting-item">
+              <span class="setting-icon">帧</span>
+              <div>
+                <strong>预览图帧数</strong>
+                <div class="frame-control">
+                  <input id="frame-count" type="number" min="1" max="36" value="9" />
+                  <span>帧</span>
+                </div>
+                <span>均匀抽取，9 帧时为标准九宫格；生成到视频所在目录</span>
+              </div>
+            </div>
+            <div class="jpg-group">
+              <h3>影片数据</h3>
+              <label class="jpg-check"><input id="jpg-info-enabled" type="checkbox" />在预览图添加影片数据</label>
+              <fieldset id="jpg-info-controls" class="jpg-controls" disabled>
+                <div class="jpg-control-row">
+                  <label for="jpg-info-language">字段名称</label>
+                  <select id="jpg-info-language"><option value="zh">中文</option><option value="en">English</option></select>
+                  <label for="jpg-info-position">位置</label>
+                  <select id="jpg-info-position"><option value="top">顶部</option><option value="bottom">底部</option></select>
+                </div>
+                <div class="jpg-control-row">
+                  <label for="jpg-info-font">字体</label>
+                  <select id="jpg-info-font"><option value="yahei">微软雅黑</option><option value="simhei">黑体</option><option value="arial">Arial</option></select>
+                  <label for="jpg-info-font-size">字号</label>
+                  <input id="jpg-info-font-size" type="number" min="12" max="36" value="22" />
+                  <label for="jpg-info-color">文字颜色</label>
+                  <input id="jpg-info-color" type="color" value="#ffffff" />
+                </div>
+                <div class="jpg-field-grid">
+                  <label class="jpg-check"><input id="jpg-info-folder" type="checkbox" />文件夹</label>
+                  <label class="jpg-check"><input id="jpg-info-filename" type="checkbox" checked />文件名</label>
+                  <label class="jpg-check"><input id="jpg-info-size" type="checkbox" checked />文件大小</label>
+                  <label class="jpg-check"><input id="jpg-info-resolution" type="checkbox" checked />分辨率</label>
+                  <label class="jpg-check"><input id="jpg-info-fps" type="checkbox" checked />FPS</label>
+                  <label class="jpg-check"><input id="jpg-info-duration" type="checkbox" checked />视频时长</label>
+                  <label class="jpg-check"><input id="jpg-info-video-codec" type="checkbox" checked />视频编码</label>
+                  <label class="jpg-check"><input id="jpg-info-audio-codec" type="checkbox" checked />音频编码</label>
+                  <label class="jpg-check"><input id="jpg-info-subtitles" type="checkbox" />字幕</label>
+                </div>
+                <div class="jpg-control-row">
+                  <label for="jpg-size-unit">文件大小单位</label>
+                  <select id="jpg-size-unit"><option value="B">B</option><option value="MB" selected>MB</option><option value="GB">GB</option></select>
+                </div>
+                <label class="jpg-check"><input id="jpg-comment-enabled" type="checkbox" />附加注释</label>
+                <input id="jpg-comment" class="jpg-comment" type="text" maxlength="160" placeholder="输入要显示在预览图上的文字" disabled />
+                <p>文件夹选项会把本地路径写入图片；分享前请检查。</p>
+              </fieldset>
+            </div>
+            <div class="jpg-group">
+              <h3>其他效果</h3>
+              <div class="jpg-control-row">
+                <label class="jpg-check"><input id="jpg-tile-border" type="checkbox" />每格白边</label>
+                <input id="jpg-tile-border-width" type="number" min="1" max="20" value="5" aria-label="每格白边宽度" />像素
+              </div>
+              <label class="jpg-check"><input id="jpg-grayscale" type="checkbox" />灰度矩阵</label>
+              <div class="jpg-control-row">
+                <label class="jpg-check"><input id="jpg-outer-border" type="checkbox" />外部边框</label>
+                <input id="jpg-outer-border-width" type="number" min="1" max="30" value="8" aria-label="外部边框宽度" />像素
+                <label for="jpg-outer-border-color">颜色</label>
+                <input id="jpg-outer-border-color" type="color" value="#ffffff" />
+              </div>
+              <div class="jpg-control-row">
+                <label class="jpg-check"><input id="jpg-bevel" type="checkbox" />倒角效果</label>
+                <input id="jpg-bevel-width" type="number" min="1" max="12" value="4" aria-label="倒角宽度" />像素
+              </div>
+            </div>
+            <div class="format-command">
+              <div class="command-heading">
+                <strong>快捷指令（PowerShell）</strong>
+                <button id="copy-jpg-command" class="button secondary" type="button">复制 JPG 指令</button>
+              </div>
+              <textarea id="jpg-command" class="command-text" rows="2" readonly aria-label="JPG 快捷指令"></textarea>
+              <p id="jpg-command-status" class="command-status" role="status">仅显示示例路径；复制后请替换视频或文件夹路径，完成后自动退出。</p>
+            </div>
+          </section>
+
+          <div class="settings-side">
+          <section class="panel setting-panel">
+            <h2>GIF 设置</h2>
+            <div class="setting-item">
+              <span class="setting-icon">GIF</span>
+              <div>
+                <strong>GIF 动图</strong>
+                <div class="frame-control">
+                  <label for="gif-sampling-mode">抽帧方式</label>
+                  <select id="gif-sampling-mode">
+                    <option value="count">指定帧数（全片均匀）</option>
+                    <option value="per-second">按每秒帧数抽取（全片）</option>
+                  </select>
+                </div>
+                <div class="frame-control">
+                  <label for="gif-quality-mode">生成模式</label>
+                  <select id="gif-quality-mode">
+                    <option value="quality">画质优先（原有模式）</option>
+                    <option value="size">体积优先（降低分辨率与色彩）</option>
+                  </select>
+                </div>
+                <div id="gif-count-settings">
+                  <div class="frame-control">
+                    <label for="gif-frame-count">抽取帧数</label>
+                    <input id="gif-frame-count" type="number" min="1" max="1000" value="9" />
+                    <span>帧</span>
+                  </div>
+                  <div class="frame-control">
+                    <label for="gif-max-duration">最长播放时长</label>
+                    <input id="gif-max-duration" type="number" min="0.1" max="1000" step="0.1" value="20" />
+                    <span>秒</span>
+                  </div>
+                  <span>保留所选帧数；时长过短时自动延长</span>
+                </div>
+                <div id="gif-per-second-settings" hidden>
+                  <div class="frame-control">
+                    <label for="gif-extraction-fps">每秒抽取</label>
+                    <input id="gif-extraction-fps" type="number" min="1" max="60" step="1" value="1" />
+                    <span>帧</span>
+                  </div>
+                  <div class="frame-control">
+                    <label for="gif-playback-fps">GIF 播放速度</label>
+                    <input id="gif-playback-fps" type="number" min="0.1" max="100" step="0.1" value="5" />
+                    <span>帧/秒</span>
+                  </div>
+                  <span>覆盖整个视频；抽帧速率与 GIF 播放速度分别设置</span>
+                </div>
+                <span>长视频和高抽帧率会产生更多帧、耗时和临时文件</span>
+              </div>
+            </div>
+            <div class="format-command">
+              <div class="command-heading">
+                <strong>快捷指令（PowerShell）</strong>
+                <button id="copy-gif-command" class="button secondary" type="button">复制 GIF 指令</button>
+              </div>
+              <textarea id="gif-command" class="command-text" rows="2" readonly aria-label="GIF 快捷指令"></textarea>
+              <p id="gif-command-status" class="command-status" role="status">仅显示示例路径；复制后请替换视频或文件夹路径，完成后自动退出。</p>
+            </div>
+          </section>
+
+        <section class="panel shared-panel">
+          <h2>其他设置</h2>
+          <div class="setting-item">
+            <span class="setting-icon">数</span>
+            <div>
+              <strong>每个文件夹最多处理的视频数</strong>
+              <div class="frame-control">
+                <input id="max-videos" type="number" min="1" max="10000" step="1" value="100" />
+                <span>个</span>
+              </div>
+              <span>子文件夹共用额度；单独选中的视频不受限制</span>
+            </div>
+          </div>
+          <div class="setting-item">
+            <span class="setting-icon">并</span>
+            <div>
+              <strong>最大并行处理数量</strong>
+              <div class="frame-control">
+                <input id="max-concurrent-videos" type="number" min="1" max="32" step="1" value="5" />
+                <span>个</span>
+              </div>
+              <span>所有主界面、右键菜单和快捷指令任务共用此上限，默认 5</span>
+            </div>
+          </div>
+          <div class="setting-item">
+            <span class="setting-icon">低</span>
+            <div>
+              <label class="low-priority-toggle" for="low-priority">
+                <input id="low-priority" type="checkbox" />
+                <strong>低优先级模式</strong>
+              </label>
+              <span>降低 FFmpeg 优先级和线程数；繁忙时延后处理下一个视频</span>
+            </div>
+          </div>
+          <div class="setting-item">
+            <span class="setting-icon">临</span>
+            <div class="setting-content">
+              <strong>临时图片存储位置</strong>
+              <div class="frame-control temp-directory-control">
+                <input id="temp-directory" type="text" placeholder="系统临时目录" readonly title="生成过程中暂存抽取的视频帧" />
+                <button id="choose-temp-directory" class="button secondary" type="button">选择</button>
+                <button id="reset-temp-directory" class="button secondary" type="button">默认</button>
+              </div>
+              <span>临时帧处理后自动清理；成品仍保存在视频所在目录</span>
+            </div>
+          </div>
+
+          <div class="shared-subsection">
+            <h3>资源管理器右键菜单</h3>
+            <p>右键视频或文件夹可分别生成 JPG 或 GIF；Windows 11 请在“显示更多选项”中查找。</p>
+            <div class="context-actions">
+              <button id="install-context-button" class="button secondary">设置右键菜单</button>
+              <button id="uninstall-context-button" class="button secondary">移除右键菜单</button>
+            </div>
+            <p id="context-status" class="context-status">仅注册当前 Windows 用户，支持随时移除。</p>
+          </div>
+
+          <div class="shared-subsection">
+            <h3>后台进度小窗</h3>
+            <label class="low-priority-toggle" for="mini-on-context-menu"><input id="mini-on-context-menu" type="checkbox" checked /> 通过右键菜单启动时显示</label>
+            <label class="low-priority-toggle" for="mini-on-quick-command"><input id="mini-on-quick-command" type="checkbox" checked /> 通过快捷指令启动时显示</label>
+            <label class="low-priority-toggle" for="mini-auto-close"><input id="mini-auto-close" type="checkbox" checked /> 任务结束后自动关闭小窗</label>
+            <label for="mini-close-action">点击小窗 × 时</label>
+            <select id="mini-close-action">
+              <option value="ask">每次询问</option>
+              <option value="terminate">终止所有任务</option>
+              <option value="minimize">隐藏至后台</option>
+            </select>
+            <p>小窗中的开关会自动保存；隐藏后可点击系统托盘图标重新打开。已有主界面打开时不再弹出小窗。</p>
+          </div>
+
+        </section>
+          </div>
+        </div>
+        <footer>9 帧且未启用数据栏或外框时为 1440 × 810；其他数量会自动排版</footer>
+      </div>
+    </main>
+    <script src="renderer.js"></script>
+  </body>
+</html>
