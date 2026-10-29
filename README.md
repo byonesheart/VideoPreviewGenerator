@@ -4,6 +4,14 @@
 
 面向普通用户的安装、设置与操作步骤见[使用说明](使用说明.md)。
 
+## 下载
+
+- [GitHub 发布页（v1.0.19 安装版）](https://github.com/byonesheart/VideoPreviewGenerator/releases/tag/v1.0.19)
+- [百度网盘（永久有效）](https://pan.baidu.com/s/13C3vuv6Ctdmg1kH1jUyurA)，提取码：`rp92`
+- [夸克网盘（永久有效）](https://pan.quark.cn/s/86efa510da96)，无需提取码
+
+两个网盘的 `/项目/VideoPreviewGenerator` 文件夹均包含 v1.0.19 安装包与源码包。发布记录见[更新说明](更新说明.md)。
+
 ## 使用方法
 
 在项目目录执行：
